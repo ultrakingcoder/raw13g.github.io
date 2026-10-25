@@ -1,12 +1,13 @@
 #!/bin/bash
 set -e
 
-# Clone the base ps4-hen repository if kpayload doesn't exist
+# Download and extract base ps4-hen template via curl if kpayload doesn't exist
 if [ ! -d "kpayload" ]; then
-    echo "Cloning base ps4-hen template..."
-    git clone https://github.com/Scene-Collective/ps4-hen.git temp_hen
-    cp -r temp_hen/. .
-    rm -rf temp_hen
+    echo "Downloading base ps4-hen template..."
+    curl -fLJO https://github.com/Scene-Collective/ps4-hen/archive/refs/heads/main.zip
+    unzip -o main.zip
+    cp -r ps4-hen-main/. .
+    rm -rf ps4-hen-main main.zip
 fi
 
 # Build kernel payload first so kpayload.inc.c is generated
