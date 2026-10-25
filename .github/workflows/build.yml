@@ -1,12 +1,16 @@
-name: Build PS4 HEN Payload
+name: Build PS4 Payload
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -14,23 +18,20 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential git unzip xxd
+          sudo apt-get install -y build-essential make git curl unzip xxd
 
       - name: Install PS4 Payload SDK
         run: |
-          sudo git clone https://github.com/Scene-Collective/ps4-payload-sdk.git /lib/ps4-payload-sdk
-          echo "PS4SDK=/lib/ps4-payload-sdk" >> $GITHUB_ENV
+          git clone https://github.com/ps4dev/ps4-payload-sdk.git /tmp/ps4-sdk
+          echo "PS4_PAYLOAD_SDK=/tmp/ps4-sdk" >> $GITHUB_ENV
 
       - name: Build Payload
         run: |
+          sed -i 's/\r$//' build.sh
           bash build.sh
-
-      - name: Rename and Prepare Payload
-        run: |
-          cp hen.bin Rev3rseApex.bin
 
       - name: Upload Compiled Payload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rev3rseapex-bin
+          name: Rev3rseApex.bin
           path: Rev3rseApex.bin
