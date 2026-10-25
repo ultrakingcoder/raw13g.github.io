@@ -4,40 +4,26 @@
   <title>Rev3rseApex PS4 Host</title>
   <style>
     html, body { margin:0; padding:0; background:#0b0d10; color:#c8ced8; font:15px/1.45 "Segoe UI", system-ui, sans-serif; }
-    #wrap { padding:16px 18px; }
-    #state { font-size:22px; font-weight:700; margin:0 0 6px; }
-    #cache { font-size:12px; color:#5c6672; margin:0 10px; min-height:14px; }
-    .ok { color:#7fd0a0; } 
-    .bad { color:#d08a7f; }
-    #brand { text-align:center; padding:8px 10px; background:#1b1e23; border-bottom:1px solid #1e2732; }
-    #brand b { font-size:15px; font-weight:700; letter-spacing:.14em; color:#e6ebf2; vertical-align:middle; }
+    #wrap { padding:20px; text-align:center; }
+    #state { font-size:22px; font-weight:700; margin:0 0 10px; color:#e6ebf2; }
+    #cache { font-size:13px; color:#8b95a3; margin:10px 0 20px; min-height:16px; }
+    .ok { color:#7fd0a0; font-weight:600; } 
+    .bad { color:#d08a7f; font-weight:600; }
+    #brand { text-align:center; padding:10px; background:#1b1e23; border-bottom:1px solid #1e2732; }
+    #brand b { font-size:16px; font-weight:700; letter-spacing:.14em; color:#e6ebf2; }
+    .btn { background:#1f6feb; color:#fff; border:none; padding:14px 28px; font-size:16px; font-weight:700; border-radius:8px; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.3); }
+    .btn:active { background:#1158c7; }
   </style>
 </head>
 <body>
-  <div id="brand"><b>Rev3rseApex PS4</b></div>
+  <div id="brand"><b>Rev3rseApex PS4 Host</b></div>
   <div id="wrap">
-    <div id="state">Initializing scripts...</div>
-    <div id="cache">Cache Status: Loading...</div>
+    <div id="state">Scripts Loaded. Ready to run.</div>
+    <div id="cache">Checking cache status...</div>
+    
+    <br>
+    <button class="btn" onclick="triggerPayload()">Run Exploit / Payload</button>
   </div>
-
-  <script>
-    // Application Cache status listener
-    window.applicationCache.addEventListener('updateready', function() {
-      window.applicationCache.swapCache();
-      document.getElementById('cache').className = "ok";
-      document.getElementById('cache').innerText = "Cache Status: Updated! Restart browser to apply.";
-    }, false);
-
-    window.applicationCache.addEventListener('noupdate', function() {
-      document.getElementById('cache').className = "ok";
-      document.getElementById('cache').innerText = "Cache Status: Up to date (Offline Ready).";
-    }, false);
-
-    window.applicationCache.addEventListener('error', function(e) {
-      document.getElementById('cache').className = "bad";
-      document.getElementById('cache').innerText = "Cache Status: Failed to load manifest.";
-    }, false);
-  </script>
 
   <!-- Required Exploit Scripts -->
   <script src="ps4_offsets.js"></script>
@@ -47,12 +33,56 @@
   <script src="core.js"></script>
 
   <script>
-    // Update state once scripts have successfully parsed
-    window.addEventListener('load', function() {
-      setTimeout(function() {
-        document.getElementById('state').innerText = "Scripts Loaded. Ready to run.";
-      }, 500);
-    });
+    // Real-time AppCache status checker
+    function updateCacheStatus() {
+      const status = window.applicationCache.status;
+      const cacheEl = document.getElementById('cache');
+      
+      switch (status) {
+        case window.applicationCache.UNCACHED:
+          cacheEl.className = "bad";
+          cacheEl.innerText = "Cache Status: Not Cached";
+          break;
+        case window.applicationCache.IDLE:
+        case window.applicationCache.UPDATEREADY:
+          cacheEl.className = "ok";
+          cacheEl.innerText = "Cache Status: Successfully Cached (Offline Ready!)";
+          break;
+        case window.applicationCache.CHECKING:
+          cacheEl.innerText = "Cache Status: Checking for updates...";
+          break;
+        case window.applicationCache.DOWNLOADING:
+          cacheEl.innerText = "Cache Status: Downloading files for offline use...";
+          break;
+        case window.applicationCache.OBSOLETE:
+          cacheEl.className = "bad";
+          cacheEl.innerText = "Cache Status: Cache Obsolete";
+          break;
+        default:
+          cacheEl.innerText = "Cache Status: Ready";
+          break;
+      }
+    }
+
+    // Run status check on load
+    window.addEventListener('load', updateCacheStatus);
+
+    // Safe execution trigger for the payload
+    function triggerPayload() {
+      document.getElementById('state').innerText = "Running Exploit...";
+      try {
+        // Calls the main function from your script chain if available
+        if (typeof main === 'function') {
+          main();
+        } else if (typeof run_jb === 'function') {
+          run_jb();
+        } else {
+          document.getElementById('state').innerText = "Payload framework initialized.";
+        }
+      } catch (err) {
+        document.getElementById('state').innerText = "Error: " + err.message;
+      }
+    }
   </script>
 </body>
 </html>
