@@ -22,7 +22,10 @@ jobs:
 
       - name: Install PS4 Payload SDK
         run: |
-          git clone https://github.com/ps4dev/ps4-payload-sdk.git /tmp/ps4-sdk
+          curl -fL -o /tmp/sdk.zip https://github.com/ps4dev/ps4-payload-sdk/archive/refs/heads/master.zip
+          mkdir -p /tmp/ps4-sdk
+          unzip -q /tmp/sdk.zip -d /tmp/
+          mv /tmp/ps4-payload-sdk-*/* /tmp/ps4-sdk/
           echo "PS4_PAYLOAD_SDK=/tmp/ps4-sdk" >> $GITHUB_ENV
 
       - name: Build Payload
