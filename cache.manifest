@@ -1,0 +1,13 @@
+CACHE MANIFEST
+# v1.0 - Rev3rseApex HEN
+
+CACHE:
+index.html
+index.js
+exploit.js
+rop.js
+webkit.js
+Rev3rseApex.bin
+
+NETWORK:
+*
