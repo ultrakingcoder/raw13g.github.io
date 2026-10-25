@@ -1,13 +1,19 @@
 #!/bin/bash
 set -e
 
-if [ ! -d "installer" ]; then
+# Clone the complete base ps4-hen repository if kpayload doesn't exist
+if [ ! -d "kpayload" ]; then
     echo "Cloning base ps4-hen template..."
     git clone https://github.com/Scene-Collective/ps4-hen.git temp_hen
-    cp -a temp_hen/installer ./installer
-    cp -a temp_hen/Makefile ./Makefile 2>/dev/null || true
+    cp -a temp_hen/. .
     rm -rf temp_hen
 fi
+
+# Build kernel payload first so kpayload.inc.c is generated
+pushd kpayload > /dev/null
+make clean || true
+make
+popd > /dev/null
 
 mkdir -p installer/source
 mkdir -p plugins
