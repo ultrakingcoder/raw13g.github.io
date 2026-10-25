@@ -28,8 +28,11 @@ for file in *.prx; do
 done
 popd > /dev/null
 
+# Process configuration ini if present, otherwise create an empty fallback
 if [ -f "hen.ini" ]; then
     xxd -i "hen.ini" | sed 's/^unsigned /static const unsigned /' > "installer/source/hen.ini.inc.c"
+else
+    touch "installer/source/hen.ini.inc.c"
 fi
 
 pushd installer > /dev/null
