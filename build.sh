@@ -1,7 +1,6 @@
 #!/bin/bash
 set -e
 
-# Explicitly download and extract base ps4-hen template via curl if kpayload doesn't exist
 if [ ! -d "kpayload" ]; then
     echo "Downloading base ps4-hen template..."
     curl -fL -o main.zip https://github.com/Scene-Collective/ps4-hen/archive/refs/heads/main.zip
@@ -10,7 +9,6 @@ if [ ! -d "kpayload" ]; then
     rm -rf ps4-hen-main main.zip
 fi
 
-# Build kernel payload first so kpayload.inc.c is generated
 cd kpayload
 make clean || true
 make
@@ -35,7 +33,6 @@ for file in *.prx; do
 done
 cd ..
 
-# Process configuration ini if present, otherwise create a valid empty fallback
 if [ -f "hen.ini" ]; then
     xxd -i "hen.ini" | sed 's/^unsigned /static const unsigned /' > "installer/source/hen.ini.inc.c"
 else
