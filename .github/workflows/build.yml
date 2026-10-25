@@ -1,36 +1,38 @@
-name: Build PS4 HEN Payload
+#!/bin/bash
+set -e
 
-on:
-  push:
-    branches: [ main, master ]
+# Download plugins package
+if [ ! -f "plugins.zip" ]; then
+    curl -fLJO https://github.com/Scene-Collective/ps4-hen-plugins/releases/latest/download/plugins.zip
+fi
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+# Create plugins directory and extract safely
+mkdir -p plugins
+unzip -o plugins.zip -d plugins/ || true
 
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y build-essential git unzip xxd
+# Ensure all .prx files are inside the plugins folder
+find . -maxdepth 2 -name "*.prx" -exec cp -n {} plugins/ \;
 
-      - name: Install PS4 Payload SDK
-        run: |
-          sudo git clone https://github.com/Scene-Collective/ps4-payload-sdk.git /lib/ps4-payload-sdk
-          echo "PS4SDK=/lib/ps4-payload-sdk" >> $GITHUB_ENV
+# Process plugin files
+pushd plugins > /dev/null
+for file in *.prx; do
+    if [ -f "$file" ]; then
+        echo "${file}"
+        xxd -i "$file" | sed 's/^unsigned /static const unsigned /' > "../installer/source/${file%.prx}_prx.inc.c"
+    fi
+done
+popd > /dev/null
 
-      - name: Build Payload
-        run: |
-          bash build.sh
+# Process configuration ini if present
+if [ -f "hen.ini" ]; then
+    xxd -i "hen.ini" | sed 's/^unsigned /static const unsigned /' > "installer/source/hen.ini.inc.c"
+fi
 
-      - name: Rename and Prepare Payload
-        run: |
-          cp hen.bin Rev3rseApex.bin
+# Compile installer
+pushd installer > /dev/null
+make clean || true
+make
+popd > /dev/null
 
-      - name: Upload Compiled Payload Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: rev3rseapex-bin
-          path: Rev3rseApex.bin
+# Copy final binary
+cp installer/installer.bin hen.bin
