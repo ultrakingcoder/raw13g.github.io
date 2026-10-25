@@ -1,4 +1,4 @@
-name: Build PS4 Payload
+name: Build and Publish PS4 Payload
 
 on:
   push:
@@ -6,6 +6,9 @@ on:
   pull_request:
     branches: [ "main", "master" ]
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -78,9 +81,17 @@ jobs:
           make
           cd ..
 
-          # 5. Output final binary
+          # 5. Output final binary to root directory
           cp installer/installer.bin Rev3rseApex.bin
           echo "Build completed successfully!"
+
+      - name: Commit and Push Payload to Repo
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.io"
+          git add Rev3rseApex.bin
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update Rev3rseApex.bin payload [skip ci]"
+          git push
 
       - name: Upload Compiled Payload Artifact
         uses: actions/upload-artifact@v4
