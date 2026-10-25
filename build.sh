@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-# Download and extract base ps4-hen template via curl if kpayload doesn't exist
+# Explicitly download and extract base ps4-hen template via curl if kpayload doesn't exist
 if [ ! -d "kpayload" ]; then
     echo "Downloading base ps4-hen template..."
-    curl -fLJO https://github.com/Scene-Collective/ps4-hen/archive/refs/heads/main.zip
+    curl -fL -o main.zip https://github.com/Scene-Collective/ps4-hen/archive/refs/heads/main.zip
     unzip -o main.zip
     cp -r ps4-hen-main/. .
     rm -rf ps4-hen-main main.zip
@@ -20,7 +20,7 @@ mkdir -p installer/source
 mkdir -p plugins
 
 if [ ! -f "plugins.zip" ]; then
-    curl -fLJO https://github.com/Scene-Collective/ps4-hen-plugins/releases/latest/download/plugins.zip
+    curl -fL -o plugins.zip https://github.com/Scene-Collective/ps4-hen-plugins/releases/latest/download/plugins.zip
 fi
 
 unzip -o plugins.zip -d plugins/ || true
