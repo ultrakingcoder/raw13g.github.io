@@ -20,12 +20,14 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y build-essential make git curl unzip xxd
 
-      - name: Install PS4 Payload SDK
+      - name: Install and Build PS4 Payload SDK
         run: |
           curl -fL -o /tmp/sdk.zip https://github.com/Scene-Collective/ps4-payload-sdk/archive/refs/heads/main.zip
           mkdir -p /tmp/ps4-sdk
           unzip -q /tmp/sdk.zip -d /tmp/
           mv /tmp/ps4-payload-sdk-*/* /tmp/ps4-sdk/
+          cd /tmp/ps4-sdk
+          make
           echo "PS4SDK=/tmp/ps4-sdk" >> $GITHUB_ENV
 
       - name: Build Payload
@@ -42,7 +44,7 @@ jobs:
               rm -rf ps4-hen-main main.zip
           fi
 
-          # 1. Build kpayload first (Official Sequence)
+          # 1. Build kpayload first
           cd kpayload
           make clean || true
           make
