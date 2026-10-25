@@ -1,53 +1,32 @@
-<!-- language: HTML, file: index.html, target: PS4 Firmware 13.52 -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" manifest="cache.appcache">
 <head>
-    <meta charset="UTF-8">
-    <title>PS4 13.52 GoldHEN Host</title>
-    <style>
-        body { background: #0b0f19; color: #38bdf8; font-family: monospace; text-align: center; padding-top: 60px; }
-        .container { max-width: 650px; margin: auto; background: #020617; padding: 30px; border: 1px solid #1e293b; border-radius: 8px; }
-        button { background: #0284c7; color: #fff; padding: 18px 36px; font-size: 20px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #0369a1; }
-        #log { margin-top: 20px; font-size: 14px; color: #34d399; text-align: left; background: #000; padding: 15px; border-radius: 4px; height: 180px; overflow-y: auto; border: 1px solid #334155; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ps4 poops</title>
+<style>
+  html, body { margin:0; padding:0; background:#0b0d10; color:#c8ced8;
+               font:15px/1.45 "Segoe UI", system-ui, sans-serif; }
+  #wrap { padding:16px 18px; }
+  #state { font-size:22px; font-weight:700; margin:0 0 10px; }
+  #out { white-space:pre-wrap; font:12px/1.45 Consolas, monospace;
+         background:#11151b; border:1px solid #1e2732; border-radius:5px;
+         padding:10px 12px; height:calc(100vh - 141px); overflow-y:auto; }
+  .ok { color:#7fd0a0; } .bad { color:#d08a7f; } .warn { color:#d8c07f; }
+  #brand { text-align:center; padding:8px 10px; background:#0e1116;
+           border-bottom:1px solid #1e2732; }
+  #brand img { width:28px; height:28px; margin-right:8px; border-radius:50%;
+               vertical-align:middle; }
+  #brand b { font-size:15px; font-weight:700; letter-spacing:.14em;
+             color:#e6ebf2; vertical-align:middle; }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>PS4 13.52 Custom GoldHEN Loader</h1>
-        <p>Ensure automatic updates are disabled and your environment is prepared.</p>
-        <button onclick="runJailbreak()">Load GoldHEN</button>
-        <div id="log">Status: Ready to initialize environment...</div>
-    </div>
-
-    <script>
-        function log(msg) {
-            const box = document.getElementById("log");
-            box.innerHTML += "<br/>> " + msg;
-            box.scrollTop = box.scrollHeight;
-        }
-
-        async function runJailbreak() {
-            try {
-                log("Initializing WebKit exploit vector...");
-                // Simulated delay for heap grooming / memory corruption primitives
-                await new Promise(r => setTimeout(r, 1200));
-                
-                log("Fetching goldhen.bin from repository host...");
-                let response = await fetch("goldhen.bin");
-                if (!response.ok) throw new Error("Failed to fetch goldhen.bin (HTTP " + response.status + ")");
-                
-                let buffer = await response.arrayBuffer();
-                log("Payload loaded into memory: " + buffer.byteLength + " bytes.");
-                
-                log("Executing kernel exploit & handing payload to ring 0...");
-                await new Promise(r => setTimeout(r, 1500));
-                
-                log("SUCCESS: GoldHEN payload injected. Check your system settings after closing browser.");
-            } catch (err) {
-                log("ERROR: " + err.message);
-            }
-        }
-    </script>
+<div id="brand"><img src="logo_raw.png" alt="" width="28" height="28"><b>RAW GAME</b></div>
+<div id="wrap">
+  <div id="state">loading poops chain...</div>
+  <div id="out"></div>
+</div>
+<script type="module">import "./chain_poops.js";</script>
 </body>
 </html>
