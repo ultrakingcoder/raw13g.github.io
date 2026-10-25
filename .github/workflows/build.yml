@@ -40,31 +40,37 @@ jobs:
               rm -rf ps4-hen-main main.zip
           fi
 
+          # Prepare directories for both kpayload and installer sources
+          mkdir -p kpayload/source installer/source plugins
+
+          # Download and extract plugins
+          curl -fL -o plugins.zip https://github.com/Scene-Collective/ps4-hen-plugins/releases/latest/download/plugins.zip
+          unzip -q plugins.zip -d plugins/ || true
+          find . -maxdepth 2 -name "*.prx" -exec cp -n {} plugins/ \;
+
+          # Convert plugins to C includes for BOTH kpayload and installer
+          for file in plugins/*.prx; do
+              if [ -f "$file" ]; then
+                  inc_name="$(basename "$file" .prx)_prx.inc.c"
+                  xxd -i "$file" | sed 's/^unsigned /static const unsigned /' > "kpayload/source/$inc_name"
+                  xxd -i "$file" | sed 's/^unsigned /static const unsigned /' > "installer/source/$inc_name"
+              fi
+          done
+
+          # Handle configuration for BOTH
+          if [ -f "hen.ini" ]; then
+              xxd -i "hen.ini" | sed 's/^unsigned /static const unsigned /' > "kpayload/source/hen.ini.inc.c"
+              xxd -i "hen.ini" | sed 's/^unsigned /static const unsigned /' > "installer/source/hen.ini.inc.c"
+          else
+              printf "static const unsigned char hen_ini[] = {};\nstatic unsigned int hen_ini_len = 0;\n" > "kpayload/source/hen.ini.inc.c"
+              printf "static const unsigned char hen_ini[] = {};\nstatic unsigned int hen_ini_len = 0;\n" > "installer/source/hen.ini.inc.c"
+          fi
+
           # Build kpayload
           cd kpayload
           make clean || true
           make
           cd ..
-
-          # Prepare directories
-          mkdir -p installer/source plugins
-
-          # Download and extract plugins
-          curl -fL -o plugins.zip https://github.com/Scene-Collective/ps4-hen-plugins/releases/latest/download/plugins.zip
-          unzip -o plugins.zip -d plugins/ || true
-          find . -maxdepth 2 -name "*.prx" -exec cp -n {} plugins/ \;
-
-          # Convert plugins to C includes
-          for file in plugins/*.prx; do
-              [ -f "$file" ] && xxd -i "$file" | sed 's/^unsigned /static const unsigned /' > "installer/source/$(basename "$file" .prx)_prx.inc.c"
-          done
-
-          # Handle configuration
-          if [ -f "hen.ini" ]; then
-              xxd -i "hen.ini" | sed 's/^unsigned /static const unsigned /' > "installer/source/hen.ini.inc.c"
-          else
-              printf "static const unsigned char hen_ini[] = {};\nstatic unsigned int hen_ini_len = 0;\n" > "installer/source/hen.ini.inc.c"
-          fi
 
           # Build installer
           cd installer
