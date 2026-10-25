@@ -4,7 +4,8 @@ set -e
 if [ ! -d "installer" ]; then
     echo "Cloning base ps4-hen template..."
     git clone https://github.com/Scene-Collective/ps4-hen.git temp_hen
-    cp -r temp_hen/* .
+    cp -a temp_hen/installer ./installer
+    cp -a temp_hen/Makefile ./Makefile 2>/dev/null || true
     rm -rf temp_hen
 fi
 
