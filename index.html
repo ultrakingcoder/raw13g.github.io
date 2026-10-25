@@ -6,11 +6,9 @@
     html, body { margin:0; padding:0; background:#0b0d10; color:#c8ced8; font:15px/1.45 "Segoe UI", system-ui, sans-serif; }
     #wrap { padding:16px 18px; }
     #state { font-size:22px; font-weight:700; margin:0 0 6px; }
-    #det { font-size:13px; color:#8b95a3; margin:0 4px; }
-    #det b { color:#c8ced8; font-weight:600; }
     #cache { font-size:12px; color:#5c6672; margin:0 10px; min-height:14px; }
-    #cache.cacheok { color:#7fd0a0; }
-    .ok { color:#7fd0a0; } .bad { color:#d08a7f; } .warn { color:#d8c07f; }
+    .ok { color:#7fd0a0; } 
+    .bad { color:#d08a7f; }
     #brand { text-align:center; padding:8px 10px; background:#1b1e23; border-bottom:1px solid #1e2732; }
     #brand b { font-size:15px; font-weight:700; letter-spacing:.14em; color:#e6ebf2; vertical-align:middle; }
   </style>
@@ -18,15 +16,43 @@
 <body>
   <div id="brand"><b>Rev3rseApex PS4</b></div>
   <div id="wrap">
-    <div id="state">Initializing...</div>
-    <div id="cache">Cache Status: Checking...</div>
+    <div id="state">Initializing scripts...</div>
+    <div id="cache">Cache Status: Loading...</div>
   </div>
 
-  <!-- Correct Exploit Scripts matching your repository -->
+  <script>
+    // Application Cache status listener
+    window.applicationCache.addEventListener('updateready', function() {
+      window.applicationCache.swapCache();
+      document.getElementById('cache').className = "ok";
+      document.getElementById('cache').innerText = "Cache Status: Updated! Restart browser to apply.";
+    }, false);
+
+    window.applicationCache.addEventListener('noupdate', function() {
+      document.getElementById('cache').className = "ok";
+      document.getElementById('cache').innerText = "Cache Status: Up to date (Offline Ready).";
+    }, false);
+
+    window.applicationCache.addEventListener('error', function(e) {
+      document.getElementById('cache').className = "bad";
+      document.getElementById('cache').innerText = "Cache Status: Failed to load manifest.";
+    }, false);
+  </script>
+
+  <!-- Required Exploit Scripts -->
   <script src="ps4_offsets.js"></script>
   <script src="mem.js"></script>
   <script src="int64.js"></script>
   <script src="jb.js"></script>
   <script src="core.js"></script>
+
+  <script>
+    // Update state once scripts have successfully parsed
+    window.addEventListener('load', function() {
+      setTimeout(function() {
+        document.getElementById('state').innerText = "Scripts Loaded. Ready to run.";
+      }, 500);
+    });
+  </script>
 </body>
 </html>
