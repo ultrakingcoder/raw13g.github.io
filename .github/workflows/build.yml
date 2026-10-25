@@ -1,11 +1,12 @@
 # language: YAML, file: .github/workflows/build.yml, target: GitHub Actions CI
-name: Build Custom HEN Payload
+name: Build and Commit Custom HEN
 
 on:
   push:
     branches: [ "main", "master" ]
-  pull_request:
-    branches: [ "main", "master" ]
+
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -25,8 +26,10 @@ jobs:
         make clean
         make
 
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: custom-payload-bin
-        path: custom_hen.bin
+    - name: Commit Compiled Binary to Repo
+      run: |
+        git config --global user.name "GitHub Actions Bot"
+        git config --global user.email "actions@github.com"
+        git add custom_hen.bin
+        git commit -m "Auto-compile custom_hen.bin [skip ci]" || echo "No changes to commit"
+        git push
