@@ -1,0 +1,29 @@
+name: Generate Golden File
+
+on:
+  workflow_dispatch:
+    inputs:
+      filename:
+        description: "Rev3rse NexusHen"
+        required: true
+        default: "Rev3rse NexusHen"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate golden file
+        run: |
+          echo "Golden file generated on $(date)" > "${{ github.event.inputs.filename }}"
+
+      - name: Commit golden file
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add "${{ github.event.inputs.filename }}"
+          git commit -m "Add golden file: ${{ github.event.inputs.filename }}"
+          git push
