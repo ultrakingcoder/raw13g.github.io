@@ -26,9 +26,11 @@ jobs:
           mkdir -p /tmp/ps4-sdk
           unzip -q /tmp/sdk.zip -d /tmp/
           mv /tmp/ps4-payload-sdk-*/* /tmp/ps4-sdk/
-          echo "PS4_PAYLOAD_SDK=/tmp/ps4-sdk" >> $GITHUB_ENV
+          echo "PS4SDK=/tmp/ps4-sdk" >> $GITHUB_ENV
 
       - name: Build Payload
+        env:
+          PS4SDK: /tmp/ps4-sdk
         run: |
           # Download base template if needed
           if [ ! -d "kpayload" ]; then
