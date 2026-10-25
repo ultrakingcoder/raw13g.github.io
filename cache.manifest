@@ -1,13 +1,12 @@
 CACHE MANIFEST
-# v1.0 - Rev3rseApex HEN
+# Version 1.0
 
 CACHE:
 index.html
-index.js
-exploit.js
-rop.js
-webkit.js
+int64.js
+jb.js
 Rev3rseApex.bin
+logo_raw.png
 
 NETWORK:
 *
