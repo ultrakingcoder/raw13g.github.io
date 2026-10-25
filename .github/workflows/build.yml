@@ -22,7 +22,7 @@ jobs:
 
       - name: Install PS4 Payload SDK
         run: |
-          curl -fL -o /tmp/sdk.zip https://github.com/ps4dev/ps4-payload-sdk/archive/refs/heads/master.zip
+          curl -fL -o /tmp/sdk.zip https://github.com/ps4dev/ps4-payload-sdk/archive/refs/heads/main.zip
           mkdir -p /tmp/ps4-sdk
           unzip -q /tmp/sdk.zip -d /tmp/
           mv /tmp/ps4-payload-sdk-*/* /tmp/ps4-sdk/
