@@ -11,14 +11,26 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Build with PS4 Payload SDK
-        uses: Scene-Collective/ps4-payload-sdk@v1
-        with:
-          app_path: .
-          build_command: bash build.sh
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential git unzip xxd
+
+      - name: Install PS4 Payload SDK
+        run: |
+          sudo git clone https://github.com/Scene-Collective/ps4-payload-sdk.git /lib/ps4-payload-sdk
+          echo "PS4SDK=/lib/ps4-payload-sdk" >> $GITHUB_ENV
+
+      - name: Build Payload
+        run: |
+          bash build.sh
+
+      - name: Rename and Prepare Payload
+        run: |
+          cp hen.bin Rev3rseApex.bin
 
       - name: Upload Compiled Payload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ps4-hen-bin
-          path: hen.bin
+          name: rev3rseapex-bin
+          path: Rev3rseApex.bin
