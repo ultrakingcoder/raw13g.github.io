@@ -89,7 +89,7 @@ jobs:
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.io"
-          git add Rev3rseApex.bin
+          git add -f Rev3rseApex.bin
           git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update Rev3rseApex.bin payload [skip ci]"
           git push
 
