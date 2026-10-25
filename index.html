@@ -22,7 +22,7 @@
     <div id="cache">Checking cache status...</div>
     
     <br>
-    <button class="btn" onclick="triggerPayload()">Run Exploit / Payload</button>
+    <button class="btn" onclick="triggerPayload()">Run Rev3rseApex Payload</button>
   </div>
 
   <!-- Required Exploit Scripts -->
@@ -48,15 +48,8 @@
           cacheEl.className = "ok";
           cacheEl.innerText = "Cache Status: Successfully Cached (Offline Ready!)";
           break;
-        case window.applicationCache.CHECKING:
-          cacheEl.innerText = "Cache Status: Checking for updates...";
-          break;
         case window.applicationCache.DOWNLOADING:
           cacheEl.innerText = "Cache Status: Downloading files for offline use...";
-          break;
-        case window.applicationCache.OBSOLETE:
-          cacheEl.className = "bad";
-          cacheEl.innerText = "Cache Status: Cache Obsolete";
           break;
         default:
           cacheEl.innerText = "Cache Status: Ready";
@@ -64,24 +57,44 @@
       }
     }
 
-    // Run status check on load
     window.addEventListener('load', updateCacheStatus);
 
-    // Safe execution trigger for the payload
+    // Fetch and execute Rev3rseApex.bin payload
     function triggerPayload() {
-      document.getElementById('state').innerText = "Running Exploit...";
-      try {
-        // Calls the main function from your script chain if available
-        if (typeof main === 'function') {
-          main();
-        } else if (typeof run_jb === 'function') {
-          run_jb();
+      document.getElementById('state').innerText = "Loading Rev3rseApex.bin into memory...";
+      
+      var req = new XMLHttpRequest();
+      req.open('GET', 'Rev3rseApex.bin', true);
+      req.responseType = 'arraybuffer';
+      
+      req.onload = function () {
+        if (req.status === 200) {
+          var payloadBin = req.response;
+          document.getElementById('state').innerText = "Payload downloaded. Executing exploit chain...";
+          
+          try {
+            // If core.js or jb.js provides a native payload sender function, call it here
+            if (typeof send_payload === 'function') {
+              send_payload(payloadBin);
+            } else if (typeof exec_loader === 'function') {
+              exec_loader(payloadBin);
+            } else {
+              // Fallback notification if execution hook is handled inside core.js automatically
+              document.getElementById('state').innerText = "Payload ready. Check console for notification!";
+            }
+          } catch (err) {
+            document.getElementById('state').innerText = "Execution Error: " + err.message;
+          }
         } else {
-          document.getElementById('state').innerText = "Payload framework initialized.";
+          document.getElementById('state').innerText = "Error: Failed to load Rev3rseApex.bin (HTTP " + req.status + ")";
         }
-      } catch (err) {
-        document.getElementById('state').innerText = "Error: " + err.message;
-      }
+      };
+      
+      req.onerror = function() {
+        document.getElementById('state').innerText = "Error: Network request failed for payload binary.";
+      };
+      
+      req.send();
     }
   </script>
 </body>
