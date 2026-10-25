@@ -2,69 +2,56 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>PS4 Custom Payload Host</title>
+    <title>PS4 Local Payload Host</title>
     <style>
         body {
-            background-color: #121212;
+            background-color: #1a1a1a;
             color: #ffffff;
-            font-family: Arial, sans-serif;
+            font-family: monospace;
             text-align: center;
-            margin-top: 80px;
+            margin-top: 100px;
         }
-        h1 { color: #0070d1; }
-        .btn {
-            background-color: #0070d1;
+        button {
+            background-color: #00439c;
             color: white;
-            padding: 15px 30px;
-            font-size: 18px;
+            padding: 12px 24px;
+            font-size: 16px;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             cursor: pointer;
-            margin: 10px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
-        .btn:hover { background-color: #005bb5; }
-        #status {
-            margin-top: 30px;
-            font-size: 18px;
-            color: #00ffcc;
-        }
+        button:hover { background-color: #005bb5; }
+        #log { margin-top: 20px; color: #00ffcc; }
     </style>
 </head>
 <body>
-
-    <h1>PS4 Homebrew Host</h1>
-    <p>Select your binary payload to load into local memory:</p>
+    <h1>PS4 Custom Payload Launcher</h1>
+    <p>Target: Firmware 13.52 Environment</p>
     
-    <button class="btn" onclick="loadPayload('goldhen.bin')">Load GoldHEN</button>
-    <button class="btn" onclick="loadPayload('custom.bin')">Load Custom Bin</button>
-
-    <div id="status">Status: Waiting for user action...</div>
+    <button onclick="fetchAndPrepPayload('goldhen.bin')">Load GoldHEN .bin</button>
+    <div id="log">Status: Idle</div>
 
     <script>
-        function loadPayload(filename) {
-            const statusDiv = document.getElementById("status");
-            statusDiv.innerText = "Status: Requesting " + filename + "...";
+        function fetchAndPrepPayload(filename) {
+            const logElement = document.getElementById("log");
+            logElement.innerText = "Status: Fetching " + filename + "...";
 
             fetch(filename)
                 .then(response => {
-                    if (!response.ok) {
-                        throw new Error("HTTP error! File not found.");
-                    }
+                    if (!response.ok) throw new Error("File not found or network error.");
                     return response.arrayBuffer();
                 })
                 .then(buffer => {
-                    statusDiv.innerText = "Status: Success! " + filename + " loaded (" + buffer.byteLength + " bytes).";
+                    logElement.innerText = "Success: " + filename + " loaded into buffer (" + buffer.byteLength + " bytes).";
                     
-                    // Note: To execute this buffer on your specific target environment, 
-                    // pass the ArrayBuffer into your ROP chain / kernel execution vector.
-                    console.log("Payload buffer ready:", buffer);
+                    // The binary buffer is now ready in memory. 
+                    // In a complete exploit chain, this ArrayBuffer is passed to your ROP/kernel execution handler.
+                    console.log("Payload ready for execution pipeline.", buffer);
                 })
                 .catch(error => {
-                    statusDiv.innerText = "Status: Failed to load " + filename + " (" + error.message + ")";
+                    logElement.innerText = "Error: " + error.message;
                 });
         }
     </script>
-
 </body>
 </html>
