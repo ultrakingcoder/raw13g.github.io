@@ -40,13 +40,13 @@ jobs:
               rm -rf ps4-hen-main main.zip
           fi
 
-          # Prepare directories for both kpayload and installer sources
+          # Prepare directories
           mkdir -p kpayload/source installer/source plugins
 
           # Download and extract plugins
           curl -fL -o plugins.zip https://github.com/Scene-Collective/ps4-hen-plugins/releases/latest/download/plugins.zip
-          unzip -q plugins.zip -d plugins/ || true
-          find . -maxdepth 2 -name "*.prx" -exec cp -n {} plugins/ \;
+          unzip -o plugins.zip -d plugins/ || true
+          find . -name "*.prx" -exec cp -n {} plugins/ \;
 
           # Convert plugins to C includes for BOTH kpayload and installer
           for file in plugins/*.prx; do
