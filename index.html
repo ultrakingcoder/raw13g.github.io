@@ -1,101 +1,70 @@
-<html manifest="cache.manifest">
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Rev3rseApex PS4 Host</title>
-  <style>
-    html, body { margin:0; padding:0; background:#0b0d10; color:#c8ced8; font:15px/1.45 "Segoe UI", system-ui, sans-serif; }
-    #wrap { padding:20px; text-align:center; }
-    #state { font-size:22px; font-weight:700; margin:0 0 10px; color:#e6ebf2; }
-    #cache { font-size:13px; color:#8b95a3; margin:10px 0 20px; min-height:16px; }
-    .ok { color:#7fd0a0; font-weight:600; } 
-    .bad { color:#d08a7f; font-weight:600; }
-    #brand { text-align:center; padding:10px; background:#1b1e23; border-bottom:1px solid #1e2732; }
-    #brand b { font-size:16px; font-weight:700; letter-spacing:.14em; color:#e6ebf2; }
-    .btn { background:#1f6feb; color:#fff; border:none; padding:14px 28px; font-size:16px; font-weight:700; border-radius:8px; cursor:pointer; box-shadow:0 4px 12px rgba(0,0,0,0.3); }
-    .btn:active { background:#1158c7; }
-  </style>
+    <meta charset="UTF-8">
+    <title>PS4 Custom Payload Host</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 80px;
+        }
+        h1 { color: #0070d1; }
+        .btn {
+            background-color: #0070d1;
+            color: white;
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .btn:hover { background-color: #005bb5; }
+        #status {
+            margin-top: 30px;
+            font-size: 18px;
+            color: #00ffcc;
+        }
+    </style>
 </head>
 <body>
-  <div id="brand"><b>Rev3rseApex PS4 Host</b></div>
-  <div id="wrap">
-    <div id="state">Scripts Loaded. Ready to run.</div>
-    <div id="cache">Checking cache status...</div>
+
+    <h1>PS4 Homebrew Host</h1>
+    <p>Select your binary payload to load into local memory:</p>
     
-    <br>
-    <button class="btn" onclick="triggerPayload()">Run Rev3rseApex Payload</button>
-  </div>
+    <button class="btn" onclick="loadPayload('goldhen.bin')">Load GoldHEN</button>
+    <button class="btn" onclick="loadPayload('custom.bin')">Load Custom Bin</button>
 
-  <!-- Required Exploit Scripts -->
-  <script src="ps4_offsets.js"></script>
-  <script src="mem.js"></script>
-  <script src="int64.js"></script>
-  <script src="jb.js"></script>
-  <script src="core.js"></script>
+    <div id="status">Status: Waiting for user action...</div>
 
-  <script>
-    // Real-time AppCache status checker
-    function updateCacheStatus() {
-      const status = window.applicationCache.status;
-      const cacheEl = document.getElementById('cache');
-      
-      switch (status) {
-        case window.applicationCache.UNCACHED:
-          cacheEl.className = "bad";
-          cacheEl.innerText = "Cache Status: Not Cached";
-          break;
-        case window.applicationCache.IDLE:
-        case window.applicationCache.UPDATEREADY:
-          cacheEl.className = "ok";
-          cacheEl.innerText = "Cache Status: Successfully Cached (Offline Ready!)";
-          break;
-        case window.applicationCache.DOWNLOADING:
-          cacheEl.innerText = "Cache Status: Downloading files for offline use...";
-          break;
-        default:
-          cacheEl.innerText = "Cache Status: Ready";
-          break;
-      }
-    }
+    <script>
+        function loadPayload(filename) {
+            const statusDiv = document.getElementById("status");
+            statusDiv.innerText = "Status: Requesting " + filename + "...";
 
-    window.addEventListener('load', updateCacheStatus);
-
-    // Fetch and execute Rev3rseApex.bin payload
-    function triggerPayload() {
-      document.getElementById('state').innerText = "Loading Rev3rseApex.bin into memory...";
-      
-      var req = new XMLHttpRequest();
-      req.open('GET', 'Rev3rseApex.bin', true);
-      req.responseType = 'arraybuffer';
-      
-      req.onload = function () {
-        if (req.status === 200) {
-          var payloadBin = req.response;
-          document.getElementById('state').innerText = "Payload downloaded. Executing exploit chain...";
-          
-          try {
-            // If core.js or jb.js provides a native payload sender function, call it here
-            if (typeof send_payload === 'function') {
-              send_payload(payloadBin);
-            } else if (typeof exec_loader === 'function') {
-              exec_loader(payloadBin);
-            } else {
-              // Fallback notification if execution hook is handled inside core.js automatically
-              document.getElementById('state').innerText = "Payload ready. Check console for notification!";
-            }
-          } catch (err) {
-            document.getElementById('state').innerText = "Execution Error: " + err.message;
-          }
-        } else {
-          document.getElementById('state').innerText = "Error: Failed to load Rev3rseApex.bin (HTTP " + req.status + ")";
+            fetch(filename)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("HTTP error! File not found.");
+                    }
+                    return response.arrayBuffer();
+                })
+                .then(buffer => {
+                    statusDiv.innerText = "Status: Success! " + filename + " loaded (" + buffer.byteLength + " bytes).";
+                    
+                    // Note: To execute this buffer on your specific target environment, 
+                    // pass the ArrayBuffer into your ROP chain / kernel execution vector.
+                    console.log("Payload buffer ready:", buffer);
+                })
+                .catch(error => {
+                    statusDiv.innerText = "Status: Failed to load " + filename + " (" + error.message + ")";
+                });
         }
-      };
-      
-      req.onerror = function() {
-        document.getElementById('state').innerText = "Error: Network request failed for payload binary.";
-      };
-      
-      req.send();
-    }
-  </script>
+    </script>
+
 </body>
 </html>
