@@ -4,8 +4,14 @@ set -e
 # Download plugins package
 if [ ! -f "plugins.zip" ]; then
     curl -fLJO https://github.com/Scene-Collective/ps4-hen-plugins/releases/latest/download/plugins.zip
-    unzip -o plugins.zip
 fi
+
+# Create plugins directory and extract safely
+mkdir -p plugins
+unzip -o plugins.zip -d plugins/ || true
+
+# Ensure all .prx files are inside the plugins folder
+find . -maxdepth 2 -name "*.prx" -exec cp -n {} plugins/ \;
 
 # Process plugin files
 pushd plugins > /dev/null
