@@ -503,3 +503,16 @@ function startAttempt() {
     );
   }
 }
+// Add export designation or include carrierHeaderCopy in core.js
+export function clearHeap() {
+  for (let i = 0; i < 10; i++) {
+    new ArrayBuffer(0x100000);
+  }
+  if (typeof window !== "undefined" && window.gc) {
+    window.gc();
+  }
+}
+
+export function carrierHeaderCopy(destination, source, count) {
+  for (let i = 0; i < count; ++i) destination[i] = source[i];
+}
