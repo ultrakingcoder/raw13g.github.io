@@ -518,3 +518,30 @@ export function clearHeap() {
     window.gc();
   }
 }
+// language: JavaScript, file: core.js, target: PlayStation 4 WebKit (FW 13.52)
+// *Complete exported bindings required by mem.js import block*
+
+export function releaseFakeCell() {
+  fakeReleased = true;
+}
+
+export function fakeCellReleased() {
+  return fakeReleased;
+}
+
+export function carrierHeaderCopy(destination, source, count) {
+  for (let i = 0; i < count; ++i) destination[i] = source[i];
+}
+
+export function carrierHomeVector() {
+  return rwOriginalVector;
+}
+
+export function clearHeap() {
+  for (let i = 0; i < 10; i++) {
+    new ArrayBuffer(0x100000);
+  }
+  if (typeof window !== "undefined" && window.gc) {
+    window.gc();
+  }
+}
