@@ -503,7 +503,13 @@ function startAttempt() {
     );
   }
 }
-// Add export designation or include carrierHeaderCopy in core.js
+// language: JavaScript, file: core.js, target: PlayStation 4 WebKit (FW 13.52)
+// *Exporting required memory operation helpers for module binding*
+
+export function carrierHeaderCopy(destination, source, count) {
+  for (let i = 0; i < count; ++i) destination[i] = source[i];
+}
+
 export function clearHeap() {
   for (let i = 0; i < 10; i++) {
     new ArrayBuffer(0x100000);
@@ -511,8 +517,4 @@ export function clearHeap() {
   if (typeof window !== "undefined" && window.gc) {
     window.gc();
   }
-}
-
-export function carrierHeaderCopy(destination, source, count) {
-  for (let i = 0; i < count; ++i) destination[i] = source[i];
 }
