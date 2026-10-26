@@ -1,12 +1,9 @@
 CACHE MANIFEST
-# Version 1.0
+# v1.0.0 YourBrandName
 
-CACHE:
 index.html
+style.css
+core.js
+mem.js
 int64.js
-jb.js
-Rev3rseApex.bin
-logo_raw.png
-
-NETWORK:
-*
+chain_poops.js
